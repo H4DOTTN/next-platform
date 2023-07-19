@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@types/styled-components": "^5.1.26",
-    "@types/three": "^0.154.0"
+    "@types/three": "^0.154.0",
+    "rollup-plugin-polyfill-node": "^0.12.0"
   }
 }
