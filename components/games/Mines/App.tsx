@@ -1,122 +1,126 @@
-import { solToLamports, lam} from 'gamba'
-import { useGamba } from 'gamba/react'
-import { ActionBar, Button, ResponsiveSize, formatLamports } from 'gamba/react-ui'
-import React, { useMemo, useState } from 'react'
-import * as Tone from 'tone'
-import { Dropdown } from '../../components/Dropdown'
-import { Cell, Container, Grid, Overlay, OverlayText } from './styles'
-import winSrc from './win.mp3'
-import tickSrc from './tick.mp3'
-import loseSrc from './lose.mp3'
+import { solToLamports } from 'gamba';
+import { useGamba } from 'gamba/react';
+import {
+  ActionBar,
+  Button,
+  ResponsiveSize,
+  formatLamports,
+} from 'gamba/react-ui';
+import React, { useMemo, useState } from 'react';
+import * as Tone from 'tone';
+import { Dropdown } from '../../common/Dropdown';
+import { Cell, Container, Grid, Overlay, OverlayText } from './styles';
+import winSrc from './win.mp3';
+import tickSrc from './tick.mp3';
+import loseSrc from './lose.mp3';
 
-const GRID_SIZE = 25
-const MINE_COUNT = 5
+const GRID_SIZE = 25;
+const MINE_COUNT = 5;
 
-const MINE_SELECT = [1, 3, 5, 10, 15, 20, 24]
-const WAGER_AMOUNTS = [0.05, 0.1, 0.25, 0.5, 1, 3].map(solToLamports)
+const MINE_SELECT = [1, 3, 5, 10, 15, 20, 24];
+const WAGER_AMOUNTS = [0.05, 0.1, 0.25, 0.5, 1, 3].map(solToLamports);
 
-const createSound = (url: string) =>
-  new Tone.Player({ url }).toDestination()
+const createSound = (url: string) => new Tone.Player({ url }).toDestination();
 
-const soundTick = createSound(tickSrc)
-const soundWin = createSound(winSrc)
-const soundLose = createSound(loseSrc)
+const soundTick = createSound(tickSrc);
+const soundWin = createSound(winSrc);
+const soundLose = createSound(loseSrc);
 
-const pitchIncreaseFactor = 1.06
+const pitchIncreaseFactor = 1.06;
 
 function Mines() {
-  const gamba = useGamba()
-  const [grid, setGrid] = useState(() => generateGrid())
-  const [unclickedSquares, setUnclickedSquares] = useState(GRID_SIZE)
-  const [loading, setLoading] = useState(false)
-  const [mines, setMines] = useState(MINE_COUNT)
-  const [firstPlay, setFirstPlay] = useState(true)
-  const [claiming, setClaiming] = useState(false)
-  const [wager, setWager] = useState(WAGER_AMOUNTS[0])
-  const [playbackRate, setPlaybackRate] = useState(1)
+  const gamba = useGamba();
+  const [grid, setGrid] = useState(() => generateGrid());
+  const [unclickedSquares, setUnclickedSquares] = useState(GRID_SIZE);
+  const [loading, setLoading] = useState(false);
+  const [mines, setMines] = useState(MINE_COUNT);
+  const [firstPlay, setFirstPlay] = useState(true);
+  const [claiming, setClaiming] = useState(false);
+  const [wager, setWager] = useState(WAGER_AMOUNTS[0]);
+  const [playbackRate, setPlaybackRate] = useState(1);
 
   const playWinSound = () => {
-    soundWin.playbackRate = playbackRate
-    soundWin.start()
-  }
+    soundWin.playbackRate = playbackRate;
+    soundWin.start();
+  };
 
-  const hasClaimableBalance = gamba.balances.user > 0
+  const hasClaimableBalance = gamba.balances.user > 0;
 
   const resetGame = async () => {
     if (gamba.balances.user > 0) {
-      setClaiming(true)
-      await gamba.withdraw()
-      setClaiming(false)
+      setClaiming(true);
+      await gamba.withdraw();
+      setClaiming(false);
     }
-    setGrid(generateGrid())
-    setUnclickedSquares(GRID_SIZE)
-    setLoading(false)
-    setFirstPlay(true)
-    setPlaybackRate(1)
-  }
+    setGrid(generateGrid());
+    setUnclickedSquares(GRID_SIZE);
+    setLoading(false);
+    setFirstPlay(true);
+    setPlaybackRate(1);
+  };
 
   const multiplier = useMemo(() => {
-    return 1 / ((unclickedSquares - mines) / unclickedSquares)
-  }, [unclickedSquares, mines])
+    return 1 / ((unclickedSquares - mines) / unclickedSquares);
+  }, [unclickedSquares, mines]);
 
   const handleClick = async (index: number) => {
     if (grid[index].status !== 'hidden') {
-      return
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const bet = new Array(unclickedSquares).fill(multiplier)
+      const bet = new Array(unclickedSquares).fill(multiplier);
       for (let i = 0; i < mines; i++) {
-        bet[i] = 0
+        bet[i] = 0;
       }
 
-      const WAGER_AMOUNTSum = bet.reduce((sum, val) => sum + val, 0)
+      const WAGER_AMOUNTSum = bet.reduce((sum, val) => sum + val, 0);
       if (WAGER_AMOUNTSum > bet.length) {
-        const overflow = WAGER_AMOUNTSum - bet.length
-        bet[bet.length - 1] -= overflow
+        const overflow = WAGER_AMOUNTSum - bet.length;
+        bet[bet.length - 1] -= overflow;
       }
 
-      let wagerInput = wager
-      let res
+      let wagerInput = wager;
+      let res;
 
       if (!firstPlay) {
-        wagerInput = gamba.balances.user
-        res = await gamba.play(bet, wagerInput, { deductFees: true })
+        wagerInput = gamba.balances.user;
+        res = await gamba.play(bet, wagerInput, { deductFees: true });
       } else {
-        res = await gamba.play(bet, wagerInput, { deductFees: false })
+        res = await gamba.play(bet, wagerInput, { deductFees: false });
       }
 
-      soundTick.start()
-      const result = await res.result()
-      const win = result.payout > 0
-      setFirstPlay(false)
+      soundTick.start();
+      const result = await res.result();
+      const win = result.payout > 0;
+      setFirstPlay(false);
 
-      const updatedGrid = [...grid]
+      const updatedGrid = [...grid];
       if (win) {
-        updatedGrid[index].status = 'gold'
-        setUnclickedSquares(unclickedSquares - 1)
-        soundTick.stop()
-        playWinSound()
-        setPlaybackRate(playbackRate * pitchIncreaseFactor)
+        updatedGrid[index].status = 'gold';
+        setUnclickedSquares(unclickedSquares - 1);
+        soundTick.stop();
+        playWinSound();
+        setPlaybackRate(playbackRate * pitchIncreaseFactor);
       } else if (!win) {
-        updatedGrid[index].status = 'mine'
-        revealRandomMines(updatedGrid, mines - 1, index)
-        setFirstPlay(true)
-        soundTick.stop()
-        soundLose.start()
-        setPlaybackRate(1)
+        updatedGrid[index].status = 'mine';
+        revealRandomMines(updatedGrid, mines - 1, index);
+        setFirstPlay(true);
+        soundTick.stop();
+        soundLose.start();
+        setPlaybackRate(1);
       }
-      setGrid(updatedGrid)
+      setGrid(updatedGrid);
     } catch (err) {
-      console.error(err)
+      console.error(err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const needsReset = firstPlay && hasClaimableBalance
+  const needsReset = firstPlay && hasClaimableBalance;
 
   return (
     <>
@@ -133,9 +137,7 @@ function Mines() {
           </div>
           {needsReset && !loading && (
             <Overlay>
-              <OverlayText>
-                Reset to start
-              </OverlayText>
+              <OverlayText>Reset to start</OverlayText>
             </Overlay>
           )}
           <Grid>
@@ -185,26 +187,28 @@ function Mines() {
             </Button>
           </div>
         )}
-        <Button disabled={!needsReset} onClick={resetGame}>Reset</Button>
+        <Button disabled={!needsReset} onClick={resetGame}>
+          Reset
+        </Button>
       </ActionBar>
     </>
-  )
+  );
 }
 
 function generateGrid() {
-  const grid = Array.from({ length: GRID_SIZE }, () => ({ status: 'hidden' }))
-  return grid
+  const grid = Array.from({ length: GRID_SIZE }, () => ({ status: 'hidden' }));
+  return grid;
 }
 
 function revealRandomMines(grid: any[], count: number, excludeIndex: number) {
-  let revealed = 0
+  let revealed = 0;
   while (revealed < count) {
-    const randomIndex = Math.floor(Math.random() * GRID_SIZE)
+    const randomIndex = Math.floor(Math.random() * GRID_SIZE);
     if (grid[randomIndex].status === 'hidden' && randomIndex !== excludeIndex) {
-      grid[randomIndex].status = 'mine'
-      revealed++
+      grid[randomIndex].status = 'mine';
+      revealed++;
     }
   }
 }
 
-export default Mines
+export default Mines;

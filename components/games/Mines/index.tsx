@@ -1,6 +1,6 @@
-import React from 'react'
+import React from 'react';
 
-import image from './image.png'
+import image from './image.png';
 
 export default {
   name: 'Mines',
@@ -8,6 +8,6 @@ export default {
   description: '',
   creator: 'DwRFGbjKbsEhUMe5at3qWvH7i8dAJyhhwdnFoZMnLVRV',
   theme_color: '#ff6a6a',
-  image,
+  image: image.src,
   app: React.lazy(() => import('./App')),
-}
+};
