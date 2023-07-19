@@ -29,7 +29,7 @@ export default function RootLayout({
                 'https://radial-delicate-layer.solana-mainnet.discover.quiknode.pro/124d30642a313843475e1ac3f67e59d11d55d943',
               config: {
                 wsEndpoint:
-                  'wwws://radial-delicate-layer.solana-mainnet.discover.quiknode.pro/124d30642a313843475e1ac3f67e59d11d55d943',
+                  'wws://radial-delicate-layer.solana-mainnet.discover.quiknode.pro/124d30642a313843475e1ac3f67e59d11d55d943',
               },
             }}
           >
